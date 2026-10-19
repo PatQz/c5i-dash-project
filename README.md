@@ -21,6 +21,46 @@ El proyecto está completamente containerizado utilizando **Docker Compose**, im
 2. **Contenedor API (`container_api_ubuntu` - FastAPI):** Aloja la lógica de negocio y se conecta en tiempo real a PostgreSQL mediante SQLAlchemy para procesar las peticiones y entregar los datos en formato JSON optimizado.
 3. **Contenedor Frontend (`container_python_dash` - Python Dash & Plotly):** La aplicación web interactiva que se comunica mediante peticiones HTTP con la API para renderizar dinámicamente los menús desplegables, el selector de tipo de llamada, el rango de fechas y las visualizaciones especializadas interactivas.
 
+### Diagrama de Funcionamiento
+
+```mermaid
+flowchart LR
+    subgraph Fuentes["Fuentes externas"]
+        PORTAL["Portal de Datos Abiertos<br/>de Sonora (Excel)"]
+        GEO["PhantomInsights<br/>GeoJSON de municipios"]
+    end
+
+    subgraph ETL["ETL local: make etl"]
+        DESC["descargar_datos.py<br/>Extracción"]
+        DATOS[("datos/<br/>caché local")]
+        CARGA["carga_datos.py<br/>Transformación y carga"]
+    end
+
+    subgraph Docker["Docker Compose"]
+        DB[("PostgreSQL 15<br/>postgres_db :5432")]
+        API["API FastAPI<br/>container_api_ubuntu :8000"]
+        DASH["Dashboard Dash / Plotly<br/>container_python_dash :8050"]
+    end
+
+    USER(["Usuario<br/>navegador web"])
+
+    PORTAL --> DESC
+    GEO --> DESC
+    DESC --> DATOS
+    DATOS --> CARGA
+    CARGA -->|"SQL - localhost:5432"| DB
+    DB -->|"Consultas SQL"| API
+    DATOS -.->|"Volumen ./datos<br/>GeoJSON"| API
+    API -->|"JSON vía HTTP"| DASH
+    USER -->|"localhost:8050"| DASH
+```
+
+**Flujo general:**
+1. **Extracción:** `descargar_datos.py` descarga los archivos Excel del portal de Sonora y el GeoJSON de municipios hacia `datos/` (solo los que falten).
+2. **Transformación y carga:** `carga_datos.py` limpia los datos y los carga en PostgreSQL. `pipeline.py` ejecuta ambos pasos en orden (`make etl`).
+3. **Servicio:** La API (FastAPI) consulta PostgreSQL y lee el GeoJSON desde el volumen compartido `./datos`.
+4. **Visualización:** El dashboard (Dash) consume la API por HTTP y el usuario lo abre en `http://localhost:8050`.
+
 ---
 
 ## 4. Fuentes de Datos y Consideraciones Temporales
