@@ -175,9 +175,9 @@ def get_top_clasificaciones(municipio: str = None, fecha_inicio: str = None, fec
 def get_analisis_sexo(municipio: str = None, fecha_inicio: str = None, fecha_fin: str = None):
     try:
         query = """
-            SELECT sexo_reportante, COUNT(*) as cantidad
+            SELECT COALESCE(NULLIF(TRIM(sexo_reportante), ''), 'Sin Especificar') as sexo_reportante, COUNT(*) as cantidad
             FROM llamadas_c5i_procedentes
-            WHERE sexo_reportante IS NOT NULL
+            WHERE 1=1
         """
         params = {}
 
@@ -193,7 +193,7 @@ def get_analisis_sexo(municipio: str = None, fecha_inicio: str = None, fecha_fin
             query += " AND fecha <= :fecha_fin"
             params["fecha_fin"] = fecha_fin
             
-        query += " GROUP BY sexo_reportante ORDER BY cantidad DESC;"
+        query += " GROUP BY 1 ORDER BY cantidad DESC;"
         
         with engine.connect() as conn:
             df = pd.read_sql(text(query), conn, params=params)
@@ -302,9 +302,9 @@ def get_estacionalidad_semanal(municipio: str = None, fecha_inicio: str = None, 
 def get_perfil_demografico(municipio: str = None, fecha_inicio: str = None, fecha_fin: str = None):
     try:
         query = """
-            SELECT sexo_reportante, clasificacion, COUNT(*) as cantidad
+            SELECT COALESCE(NULLIF(TRIM(sexo_reportante), ''), 'Sin Especificar') as sexo_reportante, clasificacion, COUNT(*) as cantidad
             FROM llamadas_c5i_procedentes
-            WHERE sexo_reportante IS NOT NULL AND clasificacion IS NOT NULL
+            WHERE clasificacion IS NOT NULL
         """
         params = {}
 
@@ -320,7 +320,7 @@ def get_perfil_demografico(municipio: str = None, fecha_inicio: str = None, fech
             query += " AND fecha <= :fecha_fin"
             params["fecha_fin"] = fecha_fin
             
-        query += " GROUP BY sexo_reportante, clasificacion ORDER BY cantidad DESC LIMIT 15;"
+        query += " GROUP BY 1, clasificacion ORDER BY cantidad DESC LIMIT 15;"
         with engine.connect() as conn:
             df = pd.read_sql(text(query), conn, params=params)
         return {"data": df.to_dict(orient='records')}
