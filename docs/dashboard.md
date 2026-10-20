@@ -19,7 +19,7 @@ Incorpora un selector de tipo de llamada de dos modos exclusivos (`PROCEDENTE` /
 * *Distribución por Sexo del Reportante:* Gráfica de anillos con la proporción demográfica normalizada (*No Registrado*, *Sin Especificar*, *Femenino*, *Masculino*).
 * *Top 10 Colonias con Mayor Incidencia:* Gráfica de barras horizontales que destaca las zonas con mayor número de reportes.
 * *Estacionalidad Semanal de Llamadas:* Gráfica de barras con el comportamiento operativo agrupado de Domingo a Sábado.
-* *Distribución Geográfica por Municipio:* Mapa coroplético interactivo de Sonora basado en GeoJSON que representa volumétricamente la incidencia municipal.
+* *Distribución Geográfica por Municipio:* Mapa interactivo de Sonora basado en GeoJSON que representa volumétricamente la incidencia municipal. Siempre muestra la vista estatal completa (no aplica el filtro de municipio) para permitir la comparación entre municipios en contexto.
 
 ## Vista de Llamadas Improcedentes (Módulo Especializado)
 * *Top Motivos de Improcedencia:* Gráfica de barras horizontales que detalla las causas principales de llamadas falsas o de mal uso (ej. "No Contesta O Cuelga", "Llamada Incompleta", "Bromas", etc.).

@@ -373,9 +373,10 @@ def update_all_analytics(selected_tipo, selected_municipio, selected_clasificaci
             fig_est = px.bar(df_est, x='dia_semana_nombre', y='cantidad', title="Estacionalidad Semanal de Llamadas", labels={'dia_semana_nombre': 'Día de la Semana', 'cantidad': 'Volumen'})
             fig_est.update_layout(plot_bgcolor='white', paper_bgcolor='white')
 
-        # 8. Mapa Geográfico
+        # 8. Mapa Geográfico (vista estatal: no aplica el filtro de municipio a propósito)
         try:
-            res_mapa = requests.get(f"{BASE_API_URL}/api/mapa-municipios", params=params, timeout=10)
+            params_mapa = {k: v for k, v in params.items() if k != 'municipio'}
+            res_mapa = requests.get(f"{BASE_API_URL}/api/mapa-municipios", params=params_mapa, timeout=10)
             mapa_json = res_mapa.json()
             df_mapa = pd.DataFrame(mapa_json.get("data", []))
             geojson_sonora = mapa_json.get("geojson", {})
@@ -391,7 +392,7 @@ def update_all_analytics(selected_tipo, selected_municipio, selected_clasificaci
                 
             fig_mapa = px.choropleth(
                 df_mapa, geojson=geojson_sonora, locations='municipio_norm', featureidkey="properties.NOMGEO_2_norm",
-                color='cantidad', color_continuous_scale="Reds", title=f"Distribución Geográfica de Llamadas Procedente por Municipio en Sonora", labels={'cantidad': 'Total de Llamadas'}
+                color='cantidad', color_continuous_scale="Reds", title="Distribución Geográfica por Municipio — Vista Estatal (no se filtra por municipio)", labels={'cantidad': 'Total de Llamadas'}
             )
             fig_mapa.update_geos(fitbounds="locations", visible=False)
             fig_mapa.update_layout(margin={"r":0,"t":40,"l":0,"b":0}, paper_bgcolor='white')
