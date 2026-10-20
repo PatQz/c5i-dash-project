@@ -363,7 +363,7 @@ def get_mapa_municipios(fecha_inicio: str = None, fecha_fin: str = None):
 def get_llamadas_c5i_improcedentes(fecha_inicio: str = None, fecha_fin: str = None):
     try:
         query = """
-            SELECT fecha, hora, motivo_no_procedente
+            SELECT CAST(fecha AS DATE) AS fecha, hora, motivo_no_procedente, COUNT(*) AS cantidad
             FROM llamadas_c5i_improcedentes
             WHERE 1=1
         """
@@ -377,7 +377,7 @@ def get_llamadas_c5i_improcedentes(fecha_inicio: str = None, fecha_fin: str = No
             query += " AND fecha <= :fecha_fin"
             params["fecha_fin"] = fecha_fin
             
-        query += " ORDER BY fecha;"
+        query += " GROUP BY CAST(fecha AS DATE), hora, motivo_no_procedente ORDER BY fecha;"
         
         with engine.connect() as conn:
             df = pd.read_sql(text(query), conn, params=params)

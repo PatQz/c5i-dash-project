@@ -403,21 +403,22 @@ def update_all_analytics(selected_tipo, selected_municipio, selected_clasificaci
         try:
             res_improc = requests.get(f"{BASE_API_URL}/api/improcedentes", params=params, timeout=10)
             df_improc = pd.DataFrame(res_improc.json().get("data", []))
-        except:
+        except Exception as e:
+            print(f"Error cargando improcedentes: {e}")
             df_improc = pd.DataFrame()
 
         if not df_improc.empty:
             df_improc['fecha'] = pd.to_datetime(df_improc['fecha'])
             
             # 1. Top Motivos
-            df_top_imp = df_improc.groupby('motivo_no_procedente').size().reset_index(name='cantidad')
+            df_top_imp = df_improc.groupby('motivo_no_procedente')['cantidad'].sum().reset_index()
             df_top_imp = df_top_imp.sort_values(by='cantidad', ascending=True).tail(10)
             fig_top_imp = px.bar(df_top_imp, x='cantidad', y='motivo_no_procedente', orientation='h', title="Top Motivos de Improcedencia", labels={'cantidad': 'Total', 'motivo_no_procedente': 'Motivo'})
             fig_top_imp.update_layout(plot_bgcolor='white', paper_bgcolor='white', margin={"r":10,"t":40,"l":10,"b":10})
 
             # --- 2. Evolución Temporal (Corregido para agrupar solo por fecha YYYY-MM-DD) ---
             df_improc['solo_fecha'] = pd.to_datetime(df_improc['fecha']).dt.date
-            df_temp_imp = df_improc.groupby('solo_fecha').size().reset_index(name='cantidad')
+            df_temp_imp = df_improc.groupby('solo_fecha')['cantidad'].sum().reset_index()
             
             fig_temp_imp = px.line(
                 df_temp_imp, x='solo_fecha', y='cantidad', markers=True, 
@@ -440,8 +441,8 @@ def update_all_analytics(selected_tipo, selected_municipio, selected_clasificaci
             pivot_imp = df_improc.pivot_table(
                 index='dia_nombre', 
                 columns='hora', 
-                values='motivo_no_procedente', 
-                aggfunc='count', 
+                values='cantidad', 
+                aggfunc='sum', 
                 fill_value=0
             )
             
@@ -479,7 +480,7 @@ def update_all_analytics(selected_tipo, selected_municipio, selected_clasificaci
                 else: return 'Noche (18-24h)'
             
             df_improc['franja'] = df_improc['hora'].apply(asignar_franja)
-            df_franja = df_improc.groupby('franja').size().reset_index(name='cantidad')
+            df_franja = df_improc.groupby('franja')['cantidad'].sum().reset_index()
 
             # Forzar el orden cronológico exacto de las franjas
             orden_franjas = ['Madrugada (00-06h)', 'Mañana (06-12h)', 'Tarde (12-18h)', 'Noche (18-24h)']
